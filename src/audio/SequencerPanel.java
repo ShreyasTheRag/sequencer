@@ -9,237 +9,145 @@ import java.util.*;
 @SuppressWarnings("serial")
 public class SequencerPanel extends JPanel implements ActionListener
 {
-    java.util.List<Sequence> sequences;
     // button array
     JButton[] buttons;
-    // private Block block, block2;
-    // static makes it so each object of the class shares `seqNum`
-    static int seqNum = 0;
-    
-    // top panel
-    JPanel topPanel;
+    // `buttonPanel` keeps buttons left-aligned
+    JPanel buttonPanel;
+    // array `sequencePanels`, one for each sequence
     JPanel[] sequencePanels;
-    // scroll bars
-    JScrollPane[] scrollPanes;
-
+    // panel scrollBar
+    JScrollPane scrollPane;
+    // which sequencePanel is highlighted
+    // sound blocks go into sequencePanels[panelEmphasis]
+    static int panelEmphasis;
+    
     // constructor: create the panel
     public SequencerPanel()
     {
-    	// call the superclass constructor (JPanel)
-    	super();
-    	setBackground(new Color(245, 235, 220));
-        setPreferredSize(new Dimension(680, 720));
-        
+    	// customize `SequencerPanel` properties
     	setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+    	setBackground(new Color(245, 235, 220));
+    	setPreferredSize(new Dimension(4000, 500));
     	
-    	// `topPanel` is added first
-    	topPanel = new JPanel();
-    	topPanel.setBackground(new Color(245, 235, 220));
-    	
-    	// add `topPanel` to this SequencerPanel instance
-        add(topPanel);
-        
-        
-    	// initialize array of 5 JPanel's, one for each sequence
+    	// initialize scrollbar
+        int v = ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
+		int h = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS;
+		scrollPane = new JScrollPane(this, v, h);
+		scrollPane.setPreferredSize(new Dimension(680, 720));
+		
+		// initialize array of 5 `JPanel`, one for each sequence
     	sequencePanels = new JPanel[5];
-    	scrollPanes = new JScrollPane[5];
     	
     	for ( int i=0; i<sequencePanels.length; ++i )
     	{
-    		sequencePanels[i] = new JPanel();
+    		// FlowLayout params set margins to 0 and left-aligns components
+    		sequencePanels[i] = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    		sequencePanels[i].setPreferredSize(new Dimension(1000, 100));
+    		sequencePanels[i].setBackground(new Color(220, 200, 200));
     		
-//    		sequencePanels[i].setBackground(new Color(12, 12, 12));
+    		// `buttonPanel` houses sequence buttons
+    		buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    		buttonPanel.setBackground(new Color(245, 235, 220));
     		
-    		int v = ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
-    		int h = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS;
-    		scrollPanes[i] = new JScrollPane(sequencePanels[i], v, h);
-    		// restrict x space
-    		scrollPanes[i].setPreferredSize(new Dimension(1000, 200));
+    		JButton button = new JButton("Sequence " + i);
+    		button.addActionListener(this);
     		
-    		add(scrollPanes[i]);
+    		buttonPanel.add(button);
+    		add(buttonPanel);
+    		add(sequencePanels[i]);
     	}
-    	
-        sequences = new ArrayList<>();
-        ButtonAction[] buttonActionValues = ButtonAction.values();
-        buttons = new JButton[buttonActionValues.length];
-        
-        for (byte i = 0; i < buttons.length; ++i) {
-            String buttonName = String.join(" ", buttonActionValues[i].name().split("_")).toLowerCase();
-            buttons[i] = new JButton((char) (buttonName.charAt(0) - ('a' - 'A')) + buttonName.substring(1));
-            buttons[i].addActionListener(this);
-            topPanel.add(buttons[i]);
-        }
-        
-        
-        
-        
-        
-        // initialize scrollbar
-        int v = ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
-		int h = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS;
-//		scrollPane = new JScrollPane(this, v, h);
-//		scrollPane.setPreferredSize(new Dimension(680, 720));
-        
-        //block = new Block(300, 300, Color.red, "block 1");
-        //block2 = new Block(400, 300, Color.red, "block 2");
+    	// first sequence emphasized
+    	sequencePanels[0].setBackground(new Color(220, 200, 240));
+    	panelEmphasis = 0;
     }
     
     // paint() function (for making boxes)
     // use Graphics2D
-    public void paint(Graphics gr)
-    {
-        super.paint(gr);
-        Graphics2D g = (Graphics2D) gr;
-        //block.render((Graphics2D) g);
-        //block2.render((Graphics2D) g);
-        for (Sequence sq : sequences) sq.render(g);
-        repaint();
-    }
+//    public void paint(Graphics gr)
+//    {
+//        super.paint(gr);
+//        Graphics2D g = (Graphics2D) gr;
+//        //block.render((Graphics2D) g);
+//        //block2.render((Graphics2D) g);
+//        for (Sequence sq : sequences) sq.render(g);
+//        repaint();
+//    }
     
     // add a box to the box list
-    private void addSequence()
+    public void addSequence(String text)
     {
-        Sequence sq = new Sequence(150 + (seqNum * 100), "Sequence " + seqNum);
-        sequences.add(sq);
-        addMouseListener(sq);
-        ++seqNum;
+//        Sequence sq = new Sequence(150 + (seqNum * 100), "Sequence " + seqNum);
+//        sequences.add(sq);
+//        addMouseListener(sq);
+//        ++seqNum;
+    	System.out.println("adding block to sequence panel " + panelEmphasis);
+    	sequencePanels[panelEmphasis].add(new BlockPanel(text));
+//    	sequencePanels[0].setBackground(new Color(200, 200, 150));
+//    	sequencePanels[0].add(new JLabel("hello"));
+    	revalidate();
+    	repaint();
     }
     
     
     @Override
     public void actionPerformed(ActionEvent e)
     {
+    	// `Sequence i` - extract `i` as int
         String actionCommand = e.getActionCommand();
-        if (actionCommand.equals("Add sequence"))
-        {
-            addSequence();
-        }
-        else if (actionCommand.equals("Add tone"))
-        {
+        panelEmphasis = Character.getNumericValue(actionCommand.charAt(9));
 
-        }
-        else if (actionCommand.equals("Add white noise"))
+        // set background color appropriately
+        // emphasized sequence is highlighted in RED
+        for (int i=0; i<5; ++i)
         {
-
+        	if (i != panelEmphasis)
+        	{
+        		sequencePanels[i].setBackground(new Color(220, 200, 200));
+        	}
+        	else
+        	{
+        		sequencePanels[i].setBackground(new Color(220, 200, 240));
+        	}
         }
-        else if (actionCommand.equals("Add percussion"))
-        {
-
-        }
-        else if (actionCommand.equals("Save"))
-        {
-
-        }
-        else if (actionCommand.equals("Play"))
-        {
-
-        }
-    }
-
-    // block class, listens to mouse input
-    class Block implements MouseListener
-    {
-        private Rectangle2D.Double rectangle;
-        private String command;
-        private Color color;
-
-        // constructor creates rectangle with mouse listener
-        Block(double xOffset, double yOffset, Color color, String command)
-        {
-            rectangle = new Rectangle2D.Double(xOffset, yOffset, 100, 100);
-            this.color = color;
-            this.command = command;
-            SequencerPanel.this.addMouseListener(this);
-        }
-        
-        // render the rectangle
-        void render(Graphics2D g) {
-            g.setColor(color);
-            g.fill(rectangle);
-        }
-        
-        // mouse listener
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (e.getX() >= rectangle.x && e.getX() <= (rectangle.x + rectangle.getWidth())
-                    && e.getY() >= rectangle.y && e.getY() <= (rectangle.y + rectangle.getHeight())) {
-                System.out.println("Mouse clicked in " + command);
-            }
-        }
-        // Below methods shouldn't do anything
-        public void mousePressed(MouseEvent e) {
-        }
-        public void mouseReleased(MouseEvent e) {}
-        public void mouseEntered(MouseEvent e) {}
-        public void mouseExited(MouseEvent e) {}
     }
     
-    // sequence class
-    class Sequence implements MouseListener {
-        Font font = new Font("Arial", Font.PLAIN, 10);
-        private Rectangle2D.Double rectangle;
-        java.util.List<Block> blockList;
-        private String name;
+    
+}
 
-        // constructor
-        Sequence(int yOffset, String name)
-        {
-            rectangle = new Rectangle2D.Double(50, yOffset, 100, 100);
-            this.name = name;
-            blockList = new ArrayList<>();
-        }
-        
-        // render the Sequence
-        public void render(Graphics2D g)
-        {
-            g.setColor(Color.black);
-            g.fill(rectangle);
-            g.setFont(font);
-            g.setColor(Color.white);
-            g.drawString(name, (float) rectangle.x, (float) rectangle.y + 10);
-            for (Block value : blockList) value.render(g);
-        }
-        
-        
-        public void addBlock()
-        {
-            //JFrame f = new JFrame("Add new sound");
+// `SequencerPanel` is filled with `BlockPanel` objects
+// extend JPanel and listen to mouse input
+@SuppressWarnings("serial")
+class BlockPanel extends JPanel implements MouseListener
+{
+	JLabel label;
 
-            //Block b = new Block(, rectangle.y, )
-        }
-        
-        
-        @Override
-        public void mouseClicked(MouseEvent e)
-        {
-            if (e.getX() >= rectangle.x && e.getX() <= (rectangle.x + rectangle.getWidth())
-                    && e.getY() >= rectangle.y && e.getY() <= (rectangle.y + rectangle.getHeight()))
-            {
-                System.out.println("Mouse clicked in ");
-            }
-        }
-        // Below methods shouldn't do anything
-        public void mousePressed(MouseEvent e)
-        {
-        }
-        public void mouseReleased(MouseEvent e) {}
-        public void mouseEntered(MouseEvent e) {}
-        public void mouseExited(MouseEvent e) {}
+    // constructor creates rectangle with mouse listener
+    BlockPanel(String text)
+    {
+    	// first call the super constructor
+    	super();
+    	
+    	setPreferredSize(new Dimension(100,100));
+    	setBackground(new Color(240, 240, 240));
+    	setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, new Color(50, 50, 80)));
+    	addMouseListener(this);
+    	label = new JLabel(text);
+    	add(label);
     }
     
-    // `Button Action` enumeration
-    private enum ButtonAction
-    {
-        ADD_SEQUENCE(null),
-        ADD_TONE(new Color(194, 13, 6)),
-        ADD_WHITE_NOISE(Color.gray),
-        ADD_PERCUSSION(new Color(15, 48, 189)),
-        SAVE(null),
-        PLAY(null);
-
-        private final Color color;
-        ButtonAction(Color color) {
-            this.color = color;
-        }
+    // mouse listener
+    @Override
+    public void mouseClicked(MouseEvent e) {
+//            if (e.getX() >= rectangle.x && e.getX() <= (rectangle.x + rectangle.getWidth())
+//                    && e.getY() >= rectangle.y && e.getY() <= (rectangle.y + rectangle.getHeight())) {
+//                System.out.println("Mouse clicked in " + command);
+//            }
+    	System.out.println("hi from " + e.getSource());
     }
+
+    // implement functions from MouseListener interface?
+    public void mousePressed(MouseEvent e) {}
+    public void mouseReleased(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {}
 }

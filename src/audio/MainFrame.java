@@ -20,6 +20,7 @@ public class MainFrame extends JFrame implements ActionListener
 	JButton startButton, playButton, tempButton;
 	JLabel infoLabel;
 	JScrollPane searchScrollPane;
+	SequencerPanel trackPanel;
 	
 	// hold sounds in `music` List
 	List<PSG> music;
@@ -31,71 +32,64 @@ public class MainFrame extends JFrame implements ActionListener
 	// constructor
 	public MainFrame ()
 	{
-		// create window frame by calling the super constructor
-		// @argument frame title
-		super("the first frame");
+		// window uses BorderLayout for ease of placing components
+		// window dimensions 1280x720, centered to the display
+		// exits on close, and user cannot resize window
+		setTitle("Sequencer Project");
+		setLayout(new BorderLayout());
+		setBackground(new Color(245, 235, 220));
+		setSize(1280,720);
+		setLocationRelativeTo(null);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setResizable(false);
+		
 		
 		// initialize `music` as ArrayList<>();
 		music = new ArrayList<>();
-		
-		// choose `BorderLayout` for flexibility in placing elements
-		setLayout(new BorderLayout());
-		
-		// customize `contentPane` properties
-		setBackground(new Color(245, 235, 220));
-		
+
 		// initialize `startPanel`
+		// use FlowLayout.CENTER to center each row in the window
 		startPanel = new JPanel();
-		startPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 260));
+		startPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 260));
 		startPanel.setBackground(new Color(220,220,220));
 		startPanel.setBorder(BorderFactory.createMatteBorder(10, 10, 10, 10, new Color(152, 163, 130)));
 		
-		// initialize `startButton`
+		// `startButton` has ActionListener
 		startButton = new JButton("Sequencer Project");
-		
-		// customize `startButton` properties
 		startButton.setPreferredSize(new Dimension(200, 75));
-		// create listener for `startButton` clicks
 		startButton.addActionListener(this);
 		
 		// add `startButton` to `startPanel`
-		startPanel.add(startButton, BorderLayout.CENTER);
+		startPanel.add(startButton);
+		// add `startPanel` to window
+		add(startPanel);
 		
-		// add `startPanel` to our frame
-		add(startPanel, BorderLayout.CENTER);
-		
-		// set window dimensions
-		setSize(1280,720);
-		// center the window to the display
-		setLocationRelativeTo(null);
-		// tell the window to exit on close
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		// prevent frame resizing
-		setResizable(false);
-		// fit window frame to element size
-//		pack();
-		// make window visible to the user
+		// make window visible (with our above changes)
 		setVisible(true);
 	}
 	
-	
-	// recursively list sound files
-	// @param `folder` we iterate through the files/subfolders
-	// create buttons and labels as needed
-	public void listFilesForFolder(File folder)
+	/**
+	 * @function listFilesForFolder()
+	 * @param folder we iterate through the files/subfolders
+	 * 
+	 * called by `buildContentPanel()` below
+	 * recursively list sound files in the (sub)directory
+	 * create buttons and labels as needed
+	 */
+	public void listFilesForFolder (File folder)
 	{
-		// iterate through each file in the folder
+		// iterate through each file in `folder`
 		for(File fileEntry : folder.listFiles())
 		{
-			// if `fileEntry` is a subfolder, recursively call this function
+			// `fileEntry` is a subfolder
 			if (fileEntry.isDirectory())
 			{
-				// create a label within our search panel
+				// create label in `searchPanel`
+				// recursively call this function on the subfolder
 				searchPanel.add(new JLabel(fileEntry.getName()));
 				listFilesForFolder(fileEntry);
 			}
-			// otherwise, `fileEntry` is a file
-			// create a button whose text is the file name
+			// `fileEntry` is a file
 			else
 			{
 				// convert filepath from `folder` to String
@@ -111,7 +105,7 @@ public class MainFrame extends JFrame implements ActionListener
 				// ex: dreamer/bass
 				subfolder = subfolder.substring(0, subfolder.lastIndexOf("."));
 				
-				// initialize `tempButton`, assign its action listener, and add to `searchPanel`
+				// initialize `tempButton`, assign ActionListener, add to `searchPanel`
 				tempButton = new JButton(subfolder);
 				tempButton.addActionListener(this);
 				searchPanel.add(tempButton);
@@ -119,57 +113,57 @@ public class MainFrame extends JFrame implements ActionListener
 		}
 	}
 	
-	// build `contentPanel` after `startButton` is clicked
-	// called by `actionPerformed()` function below
-	public void buildContentPanel()
+	/**
+	 * @function buildContentPanel()
+	 * 
+	 * build `contentPanel` after `startButton` is clicked
+	 * called by `actionPerformed()` below
+	 */
+	public void buildContentPanel ()
 	{
-		// remove `startPanel` from window
 		remove(startPanel);
 		
 		// initialize `searchPanel` (leftmost)
+		// `searchPanel` uses `BoxLayout` to fill elements from top to bottom
 		searchPanel = new JPanel();
-		
-		// `searchPanel` uses `BoxLayout` to have elements fill from top to bottom
 		searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
 		searchPanel.setBackground(new Color(180,180,210));
-		// add a scroll pane for vertical scrolling
+		
+		// add a scroll pane `searchScrollPane` for vertical scrolling
+		// `searchScrollPane` has dimensions
 		int v = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 		int h = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
 		searchScrollPane = new JScrollPane(searchPanel, v, h);
-		// restrict x space
 		searchScrollPane.setPreferredSize(new Dimension(200, 2000));
 		
-		// grab sound directory to add to `searchPanel`
-		folder = new File("./src/audio/sounds");
+		// add files, folders from sound directory to `searchPanel`
 		// create buttons, labels for all sounds in the directory
+		folder = new File("./src/audio/sounds");
 		listFilesForFolder(folder);
 		
 		
 		// initialize `contentPanel`
 		contentPanel = new JPanel();
-		// customize `contentPanel`
-		contentPanel.setPreferredSize(new Dimension(400, 720));
+		contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+//		contentPanel.setPreferredSize(new Dimension(400, 720));
 		
-		// initialize `playButton`, `searchBar`
+		// initialize `playButton` into `contentPanel`
 		playButton = new JButton("play your sound");
-		infoLabel = new JLabel("type in the audio you want to hear, ex: dreamer/harmony1");
-		
-		// add action listener to `playButton`
 		playButton.addActionListener(this);
-		
-		// add elements to `contentPanel`
 		contentPanel.add(playButton);
+		
+		infoLabel = new JLabel("selected sounds are added to the highlighted sequence");
 		contentPanel.add(infoLabel);
 		
 		// add `searchScrollPane` and `contentPanel` to the window
 		add(searchScrollPane, BorderLayout.WEST);
 		add(contentPanel, BorderLayout.CENTER);
 		
-		// create the `trackPanel`
+		// initialize `trackPanel`
 		// SequencerPanel defined in `SequencerPanel.java`
-		SequencerPanel trackPanel = new SequencerPanel();
+		trackPanel = new SequencerPanel();
 		// add `trackPanel` 's `scrollPane` to the window so we can scroll
-		add(trackPanel, BorderLayout.EAST);
+		add(trackPanel.scrollPane, BorderLayout.EAST);
 		
 		// display changes to the window
 		revalidate();
@@ -206,18 +200,17 @@ public class MainFrame extends JFrame implements ActionListener
         for (PSG c : music) c.stop();		
 	}
 	
-	// from the listener interface
+	// from `ActionListener` interface
 	// define JButton behavior on click
 	public void actionPerformed (ActionEvent e)
 	{
-		// user pressed `startButton`
-		// we want to remove `startPanel` and display `contentPanel`
+		// user pressed `startButton` -> display `contentPanel`
 		if (e.getSource() == startButton)
 		{
 			System.out.printf("startButton clicked %s\n", e);
 			buildContentPanel();
 		}
-		// user pressed `playButton`, wants to hear track
+		// user pressed `playButton` -> play track
 		else if (e.getSource() == playButton)
 		{
 			// get the search query from the text bar
@@ -230,26 +223,27 @@ public class MainFrame extends JFrame implements ActionListener
 			// play all the Sounds
 	        playSounds();
 		}
-		// one of the sound buttons in `searchPanel` is clicked
+		// user pressed sound button in `searchPanel` -> add to active sequence
 		else
 		{
-			// extract the sound's name from the event's `toString()`
+			// TODO add functionality
+			// extract button's `text` from event `e`
 			String actionCommand = e.getActionCommand();
 			System.out.println("user pressed sound button " + actionCommand);
 			
-			
-			// add to `music` list
+			// TODO make it add to the sequence
+			// add sound to `music` list
 			music.add(new CachedPSG(istream(actionCommand)));
 			
-			// add a Block
+			// TODO call a function in `SequencerPanel`
+			trackPanel.addSequence(actionCommand);
 		}
 	}
 	
 	// main function executes our program
 	public static void main(String[] args)
 	{
-		// create a new instance of the `project0001` class
-		// which displays our window
+		// create an instance of `MainFrame` class -> displays window
 		MainFrame window = new MainFrame();
 	}
 }
