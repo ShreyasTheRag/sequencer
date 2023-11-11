@@ -16,6 +16,8 @@ public interface PSG extends Runnable {
     boolean isPercussion();
     PSG setPlaybackSpeed(double d);
     double getPlaybackSpeed();
+    String getName();
+    int getLength();
 
     @FunctionalInterface
     interface Waveform {

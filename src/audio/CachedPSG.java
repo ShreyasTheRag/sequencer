@@ -22,6 +22,9 @@ public class CachedPSG implements PSG {
     private SourceDataLine channel;
     private List<Command> commands;
     private PSG.Waveform[] waveforms;
+    
+    // printing
+    public String name;
 
     private static Map<Command, SoftReference<byte[]>> createMap() {
         return new HashMap<>();
@@ -30,8 +33,9 @@ public class CachedPSG implements PSG {
         cache.put(null, createMap());
         for (PSG.Waveform pwf : PSG.PERCUSSION_WAVEFORMS) cache.put(pwf, createMap());
     }
-    public CachedPSG(InputStream file, PSG.Waveform... waveforms) {
+    public CachedPSG(InputStream file, String name, PSG.Waveform... waveforms) {
         this();
+        this.name = name;
         this.waveforms = waveforms;
         for (PSG.Waveform wf : waveforms) if (!cache.containsKey(wf)) cache.put(wf, createMap());
         try (BufferedReader r = new BufferedReader(new InputStreamReader(Objects.requireNonNull(file)))) {
@@ -48,8 +52,8 @@ public class CachedPSG implements PSG {
             e.printStackTrace();
         }
     }
-    public CachedPSG(InputStream file) {
-        this(file, PSG.Waveform.SQUARE);
+    public CachedPSG(InputStream file, String name) {
+        this(file, name, PSG.Waveform.SQUARE);
     }
     private CachedPSG() {
         running = false;
@@ -154,6 +158,14 @@ public class CachedPSG implements PSG {
     }
     public PSG.Waveform getWaveform(int index) {
         return waveforms[index];
+    }
+    public String getName()
+    {
+    	return name;
+    }
+    public int getLength()
+    {
+    	return commands.size();
     }
     public CachedPSG setWaveform(int index, PSG.Waveform waveform) {
         if (index >= waveforms.length) waveforms = Arrays.copyOf(waveforms, index + 1);

@@ -27,9 +27,8 @@ public class MainFrame extends JFrame implements ActionListener
 	JButton startButton, playButton, tempButton;
 	JLabel infoLabel;
 	
-	// hold sounds in a List of Lists of PSG
-	// play at `PB` 1.0 speed
-	List<List<PSG>> music;
+	// hold sounds in `music` List, play at `PB` 1.0 speed
+	List<PSG> music;
 	final double PB = 1.0;
 	
 	// sound directory
@@ -55,14 +54,8 @@ public class MainFrame extends JFrame implements ActionListener
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
 		
-		// initialize `music` List of List of PSG
+		// initialize `music` ArrayList, sound directory
 		music = new ArrayList<>();
-		for (int i=0; i<5; ++i)
-		{
-			music.add(new ArrayList<>());
-		}
-		
-		// initialize `folder` sound directory
 		folder = new File("./src/audio/sounds");
 
 		// initialize `startPanel`
@@ -204,15 +197,14 @@ public class MainFrame extends JFrame implements ActionListener
 	/**
 	 * @function playSounds()
 	 * 
-	 * play each sound in `music.get(index)`
+	 * play each sound in `music`
 	 */
 	public void playSounds(int index)
 	{
-        for (PSG psg : music.get(index))
+        for (PSG psg : music)
         {
         	psg.setPlaybackSpeed(PB * psg.getPlaybackSpeed());
         	psg.start();
-        	System.out.println("playing " + psg.getName() + " from track " + index);
         	
         	// sleep while sound plays
         	while (psg.isRunning())
@@ -242,11 +234,10 @@ public class MainFrame extends JFrame implements ActionListener
 		switch (source)
 		{
 			case "startButton":
-				System.out.printf("user pressed startButton\n");
+				System.out.printf("startButton clicked %s\n", e);
 				showContent();
 				break;
 			case "playButton":
-				System.out.printf("user pressed playButton\n\n");
 				// use ExecutorService to play sequences concurrently
 				executor = Executors.newFixedThreadPool(5);
 				
@@ -255,25 +246,25 @@ public class MainFrame extends JFrame implements ActionListener
 					// `j` cannot be changed
 					final int j = i;
 					executor.submit(() -> {
-						playSounds(j);
+						System.out.println("task " + j);
+						//playSounds(j);
 					});
 				}
 				
-				// shutdown service after use
+				// shut down the service after using it
 				executor.shutdown();
 				break;
 			default:
-				// user pressed sound button
+				// TODO add functionality
+				// extract button's `text` from event `e`
+				System.out.println("user pressed sound button " + source);
+				
+				// TODO make it add to the sequence
 				// add sound to `music` list
-				int index = trackPanel.getPanelSelected();
+				music.add(new CachedPSG(istream(source)));
 				
-				CachedPSG sound = new CachedPSG(istream(source), source);
-				int soundLength = sound.getLength();
-				music.get(index).add(sound);
-				System.out.printf("added %s, length %d to music.get(%d)\n", source, soundLength, index);
-				
-				// add block to appropriate sequence panel
-				trackPanel.addBlock(source, soundLength);
+				// TODO call a function in `SequencerPanel`
+				trackPanel.addBlock(source);
 				
 		}
 	}
