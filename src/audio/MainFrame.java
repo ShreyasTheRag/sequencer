@@ -29,7 +29,7 @@ public class MainFrame extends JFrame implements ActionListener
 	
 	// hold sounds in a List of Lists of PSG
 	// play at `PB` 1.0 speed
-	List<List<PSG>> music;
+	static List<List<PSG>> music;
 	final double PB = 1.0;
 	
 	// sound directory
@@ -182,7 +182,7 @@ public class MainFrame extends JFrame implements ActionListener
 		// initialize `trackPanel`
 		// pass `this` as `parentFrame`
 		// SequencerPanel defined in `SequencerPanel.java`
-		trackPanel = new SequencerPanel(this);
+		trackPanel = new SequencerPanel();
 		// add `trackPanel` by its `scrollPane` so we can scroll
 		add(trackPanel.scrollPane, BorderLayout.EAST);
 		
@@ -265,17 +265,26 @@ public class MainFrame extends JFrame implements ActionListener
 			default:
 				// user pressed sound button
 				// add sound to `music` list
-				int index = trackPanel.getPanelSelected();
+				int sequence = SequencerPanel.panelSelected;
 				
 				CachedPSG sound = new CachedPSG(istream(source), source);
 				int soundLength = sound.getLength();
-				music.get(index).add(sound);
-				System.out.printf("added %s, length %d to music.get(%d)\n", source, soundLength, index);
+				
+				// track index that this was added
+				int index = music.get(sequence).size();
+				
+				music.get(sequence).add(sound);
+				System.out.printf("added %s, length %d to music.get(%d) at index %d\n", source, soundLength, sequence, index);
 				
 				// add block to appropriate sequence panel
-				trackPanel.addBlock(source, soundLength);
+				trackPanel.addBlock(source, soundLength, index);
 				
 		}
+	}
+	
+	public int getDummy ()
+	{
+		return 1;
 	}
 	
 	// main function executes our program

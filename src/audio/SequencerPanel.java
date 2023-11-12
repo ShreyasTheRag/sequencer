@@ -9,12 +9,10 @@ import java.util.*;
  * @class SequencerPanel
  * 
  * define `trackPanel` behavior
- * connected to `MainFrame` class through `parentFrame`
  */
 @SuppressWarnings("serial")
 public class SequencerPanel extends JPanel implements ActionListener
 {
-	JFrame parentFrame;
     // button array
     JButton[] buttons;
     // `buttonPanel` left-aligns buttons
@@ -30,14 +28,10 @@ public class SequencerPanel extends JPanel implements ActionListener
     /**
      * @function constructor
      * 
-     * 
-     * @param parent: parent JFrame `mainFrame`
+     * set panel properties
      */
-    public SequencerPanel (JFrame parent)
+    public SequencerPanel ()
     {
-    	parentFrame = parent;
-    	
-    	// customize `SequencerPanel` properties
     	setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     	setBackground(new Color(245, 235, 220));
     	setPreferredSize(new Dimension(4000, 500));
@@ -78,13 +72,16 @@ public class SequencerPanel extends JPanel implements ActionListener
      * @param text
      * 
      * adds block to current highlighted sequence
-     * block has a JLabel containing `text` passed in
      * called by sound buttons located in `MainFrame`
+     * 
+     * `text` added to JLabel within block
+     * `length` block horizontal length
+     * `index` index within music.get(panelSelected)
      */
-    public void addBlock (String text, int length)
+    public void addBlock (String text, int length, int index)
     {
-    	System.out.println("adding block to sequence panel " + panelSelected);
-    	sequencePanels[panelSelected].add(new BlockPanel(text, length));
+    	System.out.println("added " + text + " block to sequence " + panelSelected);
+    	sequencePanels[panelSelected].add(new BlockPanel(panelSelected, index, text, length));
     	
     	// redraw panel to display changes
     	revalidate();
@@ -113,29 +110,21 @@ public class SequencerPanel extends JPanel implements ActionListener
         }
         sequencePanels[panelSelected].setBackground(new Color(220, 200, 240));
     }
-    
-    
-    /**
-     * @function getPanelSelected()
-     * 
-     * `panelSelected` getter function, for calling from `MainFrame`
-     */
-    public int getPanelSelected ()
-    {
-    	return panelSelected;
-    }
 }
 
 /**
  * @class BlockPanel
  * 
  * fill each sequence panel with block objects
- * each `block` has label containing `text`, the sound name
+ * block keeps track of its sequence
+ * each block has label containing `text`, the sound name
  * blocks listen to mouse input
+ * block size corresponds to sound length
  */
 @SuppressWarnings("serial")
 class BlockPanel extends JPanel implements MouseListener
 {
+	int panel, index;
 	JLabel label;
 	String text;
 
@@ -146,11 +135,10 @@ class BlockPanel extends JPanel implements MouseListener
      * 
      * construct the block with label containing `text`
      */
-    BlockPanel (String text, int length)
+    BlockPanel (int panel, int index, String text, int length)
     {
-    	// first call the super constructor
-    	super();
-    	
+    	this.panel = panel;
+    	this.index = index;
     	setPreferredSize(new Dimension(length,100));
     	setBackground(new Color(240, 240, 240));
     	setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, new Color(50, 50, 80)));
@@ -169,8 +157,15 @@ class BlockPanel extends JPanel implements MouseListener
      */
     @Override
     public void mouseClicked (MouseEvent e) {
-    	System.out.println("hi from " + text/*e.getSource()*/);
-    	delete this;
+    	System.out.printf("deleted %s block from sequence %d, index %d\n", text, panel, index);
+    	
+    	// 0x0 visually `deletes` this panel
+    	setPreferredSize(new Dimension(0, 0));
+    	// delete sound from `music` (based on this block's saved sequence, index)
+    	MainFrame.music.get(panel).remove(index);
+    	
+    	revalidate();
+    	repaint();
     }
 
     // implement functions from MouseListener interface
