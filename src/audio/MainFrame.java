@@ -15,6 +15,7 @@ import java.util.concurrent.*; // Executor, ExecutorService
 
 /**
  * @class MainFrame
+ * @author riley, shreyas
  * 
  * extends JFrame, display interactive window
  * implements ActionListener interface for button functionality
@@ -162,7 +163,6 @@ public class MainFrame extends JFrame implements ActionListener
 		searchScrollPane.setPreferredSize(new Dimension(200, 2000));
 		
 		// add files, folders from sound directory to `searchPanel`
-		// create buttons, labels for all sounds in the directory
 		listFilesForFolder(folder);
 
 

@@ -8,6 +8,7 @@ import java.util.List;
 
 /**
  * @class SequencerPanel
+ * @author riley, shreyas
  * 
  * SequencerPanel provides visual view of `music` using an array of `sequencePanels`
  * each panel corresponds to one List<PSG> in music, and are filled with `BlockPanel` to represent the individual sounds
