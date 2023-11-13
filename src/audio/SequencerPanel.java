@@ -4,25 +4,29 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
+import java.util.List;
 
 /**
  * @class SequencerPanel
  * 
- * define `trackPanel` behavior
+ * SequencerPanel provides visual view of `music` using an array of `sequencePanels`
+ * each panel corresponds to one List<PSG> in music, and are filled with `BlockPanel` to represent the individual sounds
+ * implemented as `trackPanel` in `MainFrame`
+ * 
+ * also implements ActionListeners to define behavior for JButtons
  */
 @SuppressWarnings("serial")
 public class SequencerPanel extends JPanel implements ActionListener
 {
-    // button array
-    JButton[] buttons;
-    // `buttonPanel` left-aligns buttons
+    // `buttonPanel` consists of buttons, left-aligned to the panel
     JPanel buttonPanel;
-    // array, one for each sequence
+    // array of panels, one for each `sequence` in `music`
     JPanel[] sequencePanels;
-    // panel scrollbar
+    // overarching sequencerPanel scrollbar
     JScrollPane scrollPane;
-    // defines which panel is highlighted
-    // sound blocks are added to sequencePanels[panelSelected]
+    // `blocks` is maintained in parallel to `music`
+    static List<List<BlockPanel>> blocks;
+    // `panelSelected` defines which panel is highlighted, to add sounds to
     static int panelSelected;
     
     /**
@@ -47,16 +51,18 @@ public class SequencerPanel extends JPanel implements ActionListener
     	
     	for ( int i=0; i<sequencePanels.length; ++i )
     	{
-    		// initialize `buttonPanel` to house sequence buttons
+    		// initialize `buttonPanel` to display sequence buttons
     		buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
     		buttonPanel.setBackground(new Color(245, 235, 220));
     		// initialize `button` (one for each sequence)
+    		// the `ActionCommand` is "Sequence `i`"
     		JButton button = new JButton("Sequence " + i);
     		button.addActionListener(this);
     		buttonPanel.add(button);
     		add(buttonPanel);
     		
-    		// FlowLayout params set margins to 0 and left-align components
+    		// sequencePanels are initialized with FlowLayout to accommodate BlockPanel objects with variable sizes
+    		// params set margins to 0 and left-align blocks
     		sequencePanels[i] = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
     		sequencePanels[i].setPreferredSize(new Dimension(1000, 100));
     		sequencePanels[i].setBackground(new Color(220, 200, 200));
@@ -65,23 +71,36 @@ public class SequencerPanel extends JPanel implements ActionListener
     	// initially, we highlight the first sequence
     	sequencePanels[0].setBackground(new Color(220, 200, 240));
     	panelSelected = 0;
+    	
+    	// initialize `blocks` List of List of BlockPanel
+		blocks = new ArrayList<>();
+		for (int i=0; i<5; ++i)
+		{
+			blocks.add(new ArrayList<>());
+		}
     }
     
     /**
      * @function addBlock
-     * @param text
+     * @param text, text within the block
+     * @param length, length of block, dependent on temporal length of the sound
+     * @param sequence, which sequence to add to (typically == `panelSelected`)
+     * @param index, sequential index of the sound to be added
      * 
-     * adds block to current highlighted sequence
      * called by sound buttons located in `MainFrame`
-     * 
-     * `text` added to JLabel within block
-     * `length` block horizontal length
-     * `index` index within music.get(panelSelected)
+     * adds block to `sequence`
      */
-    public void addBlock (String text, int length, int index)
+    public void addBlock (String text, int length, int sequence, int index)
     {
-    	System.out.println("added " + text + " block to sequence " + panelSelected);
-    	sequencePanels[panelSelected].add(new BlockPanel(panelSelected, index, text, length));
+    	System.out.println("added " + text + " block to sequence " + sequence);
+    	
+    	// initialize `tempBlock` with given parameters
+    	// BlockPanel is defined below
+    	BlockPanel tempBlock = new BlockPanel(sequence, index, text, length);
+    	
+    	// keep `blocks` up to date with current state of `music`
+    	blocks.get(sequence).add(tempBlock);
+    	sequencePanels[sequence].add(tempBlock);
     	
     	// redraw panel to display changes
     	revalidate();
@@ -93,17 +112,18 @@ public class SequencerPanel extends JPanel implements ActionListener
      * @param e
      * 
      * implemented from ActionListener interface
-     * listens to button clicks
+     * called by button clicks, highlights selected sequence
      */
     @Override
     public void actionPerformed (ActionEvent e)
     {
-    	// `Sequence i` - extract `i` as int
+    	// button ActionCommand is `Sequence 'i'`
+    	// we extract `i` as int
         String actionCommand = e.getActionCommand();
         panelSelected = Character.getNumericValue(actionCommand.charAt(9));
 
-        // set sequence background color appropriately
         // selected sequence is highlighted in blue
+        // other sequences are red
         for ( int i=0; i<5; ++i )
         {
     		sequencePanels[i].setBackground(new Color(220, 200, 200));
@@ -116,28 +136,31 @@ public class SequencerPanel extends JPanel implements ActionListener
  * @class BlockPanel
  * 
  * fill each sequence panel with block objects
- * block keeps track of its sequence
- * each block has label containing `text`, the sound name
- * blocks listen to mouse input
+ * block keeps track of which sequence its in, as well as its `index` within the sequence
+ * each block contains label of `text`, the sound name
  * block size corresponds to sound length
+ * block listens to mouse input, deletes itself from `music`, `blocks`, and hides from display when clicked
  */
 @SuppressWarnings("serial")
 class BlockPanel extends JPanel implements MouseListener
 {
-	int panel, index;
+	int sequence, index;
 	JLabel label;
 	String text;
 
     /**
      * @function constructor
-     * @param text
-     * 
+     * @param sequence, which sequence in `music` the sound resides
+     * @param index, sound's sequential index within `sequence`
+     * @param text, displayed within label inside block
+     * @param length, temporal length of sound, corresponds to block width
      * 
      * construct the block with label containing `text`
+     * block has right border to differentiate between them
      */
-    BlockPanel (int panel, int index, String text, int length)
+    BlockPanel (int sequence, int index, String text, int length)
     {
-    	this.panel = panel;
+    	this.sequence = sequence;
     	this.index = index;
     	setPreferredSize(new Dimension(length,100));
     	setBackground(new Color(240, 240, 240));
@@ -153,22 +176,35 @@ class BlockPanel extends JPanel implements MouseListener
      * @function mouseClicked
      * @param e
      * 
-     * define behavior of block on mouseclick
+     * block visually hides itself on mouseclick
+     * also is removed from `blocks` and `music` lists
      */
     @Override
     public void mouseClicked (MouseEvent e) {
-    	System.out.printf("deleted %s block from sequence %d, index %d\n", text, panel, index);
+    	System.out.printf("deleted %s block from sequence %d, index %d\n", text, sequence, index);
     	
-    	// 0x0 visually `deletes` this panel
+    	// 0x0 visually hides this panel
     	setPreferredSize(new Dimension(0, 0));
-    	// delete sound from `music` (based on this block's saved sequence, index)
-    	MainFrame.music.get(panel).remove(index);
     	
+    	// call MainFrame function `removeSound()` 
+    	// which deletes the corresponding sound from `music` (based on sequence, index)
+    	MainFrame.removeSound(sequence, index);
+    	SequencerPanel.blocks.get(sequence).remove(index);
+    	
+    	// keep `blocks` up to date with `music`
+    	// update indices within the sequence s.t. we avoid OutOfBounds errors
+    	int nums = SequencerPanel.blocks.get(sequence).size();
+    	for (int i=0; i<nums; ++i)
+    	{
+    		SequencerPanel.blocks.get(sequence).get(i).index = i;
+    	}
+    	
+    	// display changes
     	revalidate();
     	repaint();
     }
 
-    // implement functions from MouseListener interface
+    // functions from MouseListener interface
     public void mousePressed(MouseEvent e) {}
     public void mouseReleased(MouseEvent e) {}
     public void mouseEntered(MouseEvent e) {}

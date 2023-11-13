@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ref.SoftReference;
 import java.util.*;
+
 // PSG = Programmable sound generator
 public class CachedPSG implements PSG {
     private static final float SAMPLE_RATE_KHZ = 44.1f; // 44.1 kHz sample rate (CD quality)
