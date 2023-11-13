@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"audio","l":"BlockPanel"},{"p":"audio","l":"MainFrame"},{"p":"audio","l":"SequencerPanel"}];updateSearchResults();

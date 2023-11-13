@@ -237,7 +237,7 @@ public class MainFrame extends JFrame implements ActionListener
 	 */
 	private static InputStream istream(String file)
 	{
-		return PSGTester.class.getResourceAsStream("/audio/sounds/" + file + ".txt");
+		return MainFrame.class.getResourceAsStream("/audio/sounds/" + file + ".txt");
 	}
 
 	/**
